@@ -11,8 +11,12 @@ declare-option -hidden int old_column
 define-command enable-smoothwrap -docstring 'enable smoothwrap' %{
     add-highlighter global/ wrap -word -width %opt{wrap_width}
 
-    map global normal j %{ : smoothwrap-down }
-    map global normal k %{ : smoothwrap-up }
+    map global normal j %{
+        : smoothwrap-down
+    }
+    map global normal k %{
+        : smoothwrap-up
+    }
 }
 
 define-command smoothwrap-down -docstring "go down one line" %{
