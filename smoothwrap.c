@@ -26,18 +26,18 @@ bool is_brakable_char(char ch) {
 }
 
 // calculate the distance to the next space or end of word
-int distance_to_boundry(String_t line, int x) {
+int distance_to_boundry(String_t line, int x, int wrap_width) {
     if (is_brakable_char(line.data[x])) return 1;
 
     for (int i = x; i < line.len; i++) {
         if (is_brakable_char(line.data[i])) {
             int dist = i - x;
-            return dist > 80 ? 80 : dist;
+            return dist > wrap_width ? wrap_width : dist;
         }
     }
 
     int dist = line.len - x;
-    return dist > 80 ? 80 : dist;
+    return dist > wrap_width ? wrap_width : dist;
 }
 
 // calculate the positions where the line wraps
@@ -46,7 +46,7 @@ void calc_line_ends(String_t line, int wrap_width) {
     int visual_column = 0;
 
     while (position < line.len) {
-        int dist = distance_to_boundry(line, position);
+        int dist = distance_to_boundry(line, position, wrap_width);
         position += dist;
         visual_column += dist;
         if (visual_column > wrap_width) {
