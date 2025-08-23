@@ -89,8 +89,6 @@ int main(int argc, char *argv[]) {
         .len = strlen(argv[3])
     };
     int wrap_width = atoi(argv[4]);
-    int window_width = atoi(argv[5]);
-    wrap_width = window_width < wrap_width ? window_width : wrap_width;
 
     calc_line_ends(line, wrap_width);
     column_to_position(column);
@@ -102,6 +100,8 @@ int main(int argc, char *argv[]) {
             printf("%dl", pos - 1);
         } else {
             printf(": set-option global go_to_next_line true\n");
+            printf(": set-option global visual_column %d\n", x);
+            fprintf(stderr, "set: %d\n", x);
             printf("j");
         }
     }
@@ -113,12 +113,19 @@ int main(int argc, char *argv[]) {
             if (pos > 1) printf("%dl", pos - 1);
         } else {
             printf(": set-option global go_to_previous_line true\n");
+            printf(": set-option global visual_column %d\n", x);
             printf("k");
         }
     }
 
+    else if (strcmp(movement, "next") == 0) {
+        int pos = position_to_column(column + 1, 1);
+        printf("gh");
+        if (pos != 1) printf("%dl", pos - 1);
+    }
+
     else if (strcmp(movement, "previous") == 0) {
-        int pos = position_to_column(1, line_ends_len - 1);
+        int pos = position_to_column(x, line_ends_len - 1);
         printf("gh");
         if (pos != 1) printf("%dl", pos - 1);
     }
