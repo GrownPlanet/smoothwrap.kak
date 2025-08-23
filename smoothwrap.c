@@ -80,7 +80,7 @@ int position_to_column(int x, int y) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) return 1;
+    if (argc < 5) return 1;
 
     char* movement = argv[1];
     int column = atoi(argv[2]) - 1;
@@ -98,16 +98,28 @@ int main(int argc, char *argv[]) {
     if (strcmp(movement, "down") == 0) {
         printf("gh");
         int pos = position_to_column(x, y + 1);
-        if (y + 1 != line_ends_len) printf("%dl", pos - 1);
-        else printf("j");
+        if (y + 1 != line_ends_len) {
+            printf("%dl", pos - 1);
+        } else {
+            printf(": set-option global go_to_next_line true\n");
+            printf("j");
+        }
     }
 
-    if (strcmp(movement, "up") == 0) {
+    else if (strcmp(movement, "up") == 0) {
         printf("gh");
         int pos = position_to_column(x, y - 1);
         if (y > 1) {
             if (pos > 1) printf("%dl", pos - 1);
+        } else {
+            printf(": set-option global go_to_previous_line true\n");
+            printf("k");
         }
-        else printf("k");
+    }
+
+    else if (strcmp(movement, "previous") == 0) {
+        int pos = position_to_column(1, line_ends_len - 1);
+        printf("gh");
+        if (pos != 1) printf("%dl", pos - 1);
     }
 }
