@@ -41,3 +41,6 @@ enable-smoothwrap
 
 ## Limitations
 For now, the project only handles going up and down in a wrapped text. If you want more features or find any bugs, feel free to open an issue or submit a pull request.
+
+## Notes
+Kakoune has recently added the `gu` and `gd` motions to go up or down one line, they are still experimental but might work better than this project.
