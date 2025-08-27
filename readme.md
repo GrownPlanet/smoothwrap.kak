@@ -6,15 +6,18 @@ Use `:enable-smoothwrap` in any file or add `enable-smoothwrap` to your kakrc fi
 
 You can configure the width at which words wrap with
 ``` kak
-set-option wrap_width 80
+set-option wrap_width 80  # char at which the cursor wraps
+set-option map_jumps true # wether to remap 'gj' and 'gk'
 ```
 
 You can also manually wrap the text at the chosen width and manually assign the keys
 ``` kak
 add-highlighter global/ wrap -word -width %opt{wrap_width}
 
-map global normal j %{ : smoothwrap-down }
-map global normal k %{ : smoothwrap-up }
+map global normal j ": smoothwrap-down<ret>"
+map global normal k ": smoothwrap-up<ret>"
+map global goto l -docstring "visual line end" "<esc>: smoothwrap-end<ret>"
+map global goto h -docstring "visual line begin" "<esc>: smoothwrap-begin<ret>"
 ```
 
 ## Installing
@@ -35,7 +38,8 @@ source "%val{config}/plugins/smoothwrap.kak/smoothwrap.kak"
 
 4. (optional) Configure and use it
 ``` kak
-set-option wrap_width 80
+set-option wrap_width 80  # char at which the cursor wraps
+set-option map_jumps true # wether to remap 'gj' and 'gk'
 enable-smoothwrap
 ```
 
@@ -43,4 +47,4 @@ enable-smoothwrap
 For now, the project only handles going up and down in a wrapped text. If you want more features or find any bugs, feel free to open an issue or submit a pull request.
 
 ## Notes
-Kakoune has recently added the `gu` and `gd` motions to go up or down one line, they are still experimental but might work better than this project.
+Kakoune has recently (a day before I started this project :( ) added the `gu` and `gd` motions to go up or down one line, they are still experimental but might work better than this project.

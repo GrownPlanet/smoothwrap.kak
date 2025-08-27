@@ -87,7 +87,7 @@ IntVec_t get_breakpoints(String_t line, int wrap_width) {
     return breakpoints;
 }
 
-// turn the colmn into an x, y position
+// turn the column into a x, y position
 void column_to_position(IntVec_t breakpoints, int column, int *x, int *y) {
     for (int i = 0; i < breakpoints.len - 1; i++) {
         if (breakpoints.data[i] <= column && column < breakpoints.data[i + 1]) {
@@ -98,10 +98,12 @@ void column_to_position(IntVec_t breakpoints, int column, int *x, int *y) {
     }
 }
 
+// turn a x, y position into a column
 int position_to_column(IntVec_t breakpoints, int x, int y) {
     int mapped_x = x;
-    if (x >= breakpoints.data[y] - breakpoints.data[y - 1]) {
-        mapped_x = breakpoints.data[y] - breakpoints.data[y - 1];
+    int line_length = breakpoints.data[y] - breakpoints.data[y - 1];
+    if (x >= line_length) {
+        mapped_x = line_length;
     }
     return breakpoints.data[y - 1] + mapped_x;
 }
@@ -133,7 +135,6 @@ int main(int argc, char *argv[]) {
         } else {
             printf(": set-option global go_to_next_line true\n");
             printf(": set-option global visual_column %d\n", x);
-            fprintf(stderr, "set: %d\n", x);
             printf("j");
         }
     }
@@ -159,7 +160,18 @@ int main(int argc, char *argv[]) {
     else if (strcmp(motion, "previous") == 0) {
         int pos = position_to_column(breakpoints, x, breakpoints.len - 1);
         printf("gh");
-        fprintf(stderr, "%d\n", pos);
+        if (pos > 1) printf("%dl", pos - 1);
+    }
+
+    else if (strcmp(motion, "end") == 0) {
+        int pos = position_to_column(breakpoints, wrap_width, y) - 1;
+        printf("gh");
         if (pos != 0) printf("%dl", pos - 1);
+    }
+
+    else if (strcmp(motion, "begin") == 0) {
+        int pos = position_to_column(breakpoints, 0, y) + 1;
+        printf("gh");
+        if (pos > 1) printf("%dl", pos - 1);
     }
 }
