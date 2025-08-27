@@ -4,10 +4,10 @@ declare-option -docstring "wrap at the given column" int wrap_width 80
 
 # Internal variables
 
-    declare-option -hidden int cursor_column
-    declare-option -hidden int visual_column
-    declare-option -hidden bool go_to_previous_line
-    declare-option -hidden bool go_to_next_line
+declare-option -hidden int cursor_column
+declare-option -hidden int visual_column
+declare-option -hidden bool go_to_previous_line
+declare-option -hidden bool go_to_next_line
 
 # commands
 

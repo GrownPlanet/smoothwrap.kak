@@ -8,20 +8,44 @@ typedef struct {
     int len;
 } String_t;
 
-int line_ends[50] = { 0 };
-int line_ends_len = 1;
-int x, y;
+typedef struct {
+    int *data;
+    int len;
+    int capacity;
+} IntVec_t;
+
+IntVec_t IntVec_new(int capacity) {
+    int *data = (int*)malloc(sizeof(int) * capacity);
+    if (data == NULL) {
+        fprintf(stderr, "malloc failed!");
+        exit(1);
+    }
+
+    return (IntVec_t) {
+        .data = data,
+        .capacity = capacity,
+        .len = 0,
+    };
+}
+
+void IntVec_push(IntVec_t *vec, int element) {
+    if (vec->len + 1 >= vec->capacity) {
+        vec->capacity *= 2;
+        vec->data = (int*)realloc(vec->data, sizeof(int) * vec->capacity);
+        if (vec->data == NULL) {
+            fprintf(stderr, "realloc failed!");
+            exit(1);
+        }
+    }
+    vec->data[vec->len] = element;
+    vec->len += 1;
+}
 
 // check if a certain character can break for a newline
 bool is_brakable_char(char ch) {
     switch (ch) {
-        case ' ':
-        case '(': case ')':
-        case '[': case ']':
-        case '{': case '}':
-            return true;
-        default:
-            return false;
+        case ' ': return true;
+        default: return false;
     }
 }
 
@@ -41,7 +65,10 @@ int distance_to_boundry(String_t line, int x, int wrap_width) {
 }
 
 // calculate the positions where the line wraps
-void calc_line_ends(String_t line, int wrap_width) {
+IntVec_t get_breakpoints(String_t line, int wrap_width) {
+    IntVec_t breakpoints = IntVec_new(2);
+    IntVec_push(&breakpoints, 0);
+
     int position = 0;
     int visual_column = 0;
 
@@ -50,39 +77,42 @@ void calc_line_ends(String_t line, int wrap_width) {
         position += dist;
         visual_column += dist;
         if (visual_column > wrap_width) {
-            line_ends[line_ends_len] = position - dist;
-            line_ends_len++;
+            IntVec_push(&breakpoints, position - dist);
             visual_column = dist;
         }
     }
 
-    line_ends[line_ends_len] = line.len;
-    line_ends_len++;
+    IntVec_push(&breakpoints, line.len);
+
+    return breakpoints;
 }
 
 // turn the colmn into an x, y position
-void column_to_position(int column) {
-    for (int i = 0; i < line_ends_len - 1; i++) {
-        if (line_ends[i] <= column && column < line_ends[i + 1]) {
-            x = column - line_ends[i] + 1;
-            y = i + 1;
+void column_to_position(IntVec_t breakpoints, int column, int *x, int *y) {
+    for (int i = 0; i < breakpoints.len - 1; i++) {
+        if (breakpoints.data[i] <= column && column < breakpoints.data[i + 1]) {
+            *x = column - breakpoints.data[i] + 1;
+            *y = i + 1;
             return;
         }
     }
 }
 
-int position_to_column(int x, int y) {
+int position_to_column(IntVec_t breakpoints, int x, int y) {
     int mapped_x = x;
-    if (x >= line_ends[y] - line_ends[y - 1]) {
-        mapped_x = line_ends[y] - line_ends[y - 1];
+    if (x >= breakpoints.data[y] - breakpoints.data[y - 1]) {
+        mapped_x = breakpoints.data[y] - breakpoints.data[y - 1];
     }
-    return line_ends[y - 1] + mapped_x;
+    return breakpoints.data[y - 1] + mapped_x;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 5) return 1;
+    if (argc < 5) {
+        fprintf(stderr, "expected 4 arguments, got %d");
+        return 1;
+    }
 
-    char* movement = argv[1];
+    char* motion = argv[1];
     int column = atoi(argv[2]) - 1;
     String_t line = {
         .data = argv[3],
@@ -90,13 +120,15 @@ int main(int argc, char *argv[]) {
     };
     int wrap_width = atoi(argv[4]);
 
-    calc_line_ends(line, wrap_width);
-    column_to_position(column);
+    IntVec_t breakpoints = get_breakpoints(line, wrap_width);
 
-    if (strcmp(movement, "down") == 0) {
+    int x, y;
+    column_to_position(breakpoints, column, &x, &y);
+
+    if (strcmp(motion, "down") == 0) {
         printf("gh");
-        int pos = position_to_column(x, y + 1);
-        if (y + 1 != line_ends_len) {
+        int pos = position_to_column(breakpoints, x, y + 1);
+        if (y + 1 != breakpoints.len) {
             printf("%dl", pos - 1);
         } else {
             printf(": set-option global go_to_next_line true\n");
@@ -106,9 +138,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    else if (strcmp(movement, "up") == 0) {
+    else if (strcmp(motion, "up") == 0) {
         printf("gh");
-        int pos = position_to_column(x, y - 1);
+        int pos = position_to_column(breakpoints, x, y - 1);
         if (y > 1) {
             if (pos > 1) printf("%dl", pos - 1);
         } else {
@@ -118,15 +150,16 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    else if (strcmp(movement, "next") == 0) {
-        int pos = position_to_column(column + 1, 1);
+    else if (strcmp(motion, "next") == 0) {
+        int pos = position_to_column(breakpoints, column + 1, 1);
         printf("gh");
         if (pos != 1) printf("%dl", pos - 1);
     }
 
-    else if (strcmp(movement, "previous") == 0) {
-        int pos = position_to_column(x, line_ends_len - 1);
+    else if (strcmp(motion, "previous") == 0) {
+        int pos = position_to_column(breakpoints, x, breakpoints.len - 1);
         printf("gh");
-        if (pos != 1) printf("%dl", pos - 1);
+        fprintf(stderr, "%d\n", pos);
+        if (pos != 0) printf("%dl", pos - 1);
     }
 }
