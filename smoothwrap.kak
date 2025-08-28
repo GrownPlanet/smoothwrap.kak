@@ -14,7 +14,7 @@ declare-option -hidden bool go_to_next_line
 # commands
 
 define-command enable-smoothwrap -docstring "enable smoothwrap" %{
-    add-highlighter global/ wrap -word -width %opt{wrap_width}
+    add-highlighter global/smoothwrap wrap -word -width %opt{wrap_width}
 
     map global normal j ": smoothwrap-down<ret>"
     map global normal k ": smoothwrap-up<ret>"
@@ -25,6 +25,14 @@ define-command enable-smoothwrap -docstring "enable smoothwrap" %{
             echo "map global goto h -docstring 'visual line begin' '<esc>: smoothwrap-begin<ret>'"
         fi
     }
+}
+
+define-command disable-smoothwrap -docstring 'disable smoothwrap' %{
+    remove-highlighter global/smoothwrap
+    unmap global normal j
+    unmap global normal k
+    unmap global goto l
+    unmap global goto h
 }
 
 define-command smoothwrap-down -docstring "go down one line" %{
